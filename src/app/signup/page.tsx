@@ -1,9 +1,10 @@
 ﻿'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Sparkles, Mail, Lock, User, ArrowRight } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -13,18 +14,65 @@ export default function SignUpPage() {
     password: '',
     confirmPassword: '',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) router.replace('/dashboard');
+    });
+  }, [router]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // TODO: Implement actual signup logic with backend
-    // For now, simulate successful signup and redirect to dashboard
-    console.log('Sign up with:', formData, 'Plan: free (auto-assigned)');
-    
-    // Simulate account creation
-    alert('Account created! You have been assigned the Free plan (5 resumes/month). You can upgrade anytime from your dashboard.');
-    
-    // Redirect to dashboard
+
+    setIsSubmitting(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    if (formData.password !== formData.confirmPassword) {
+      setErrorMessage('Passwords do not match.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email: formData.email,
+      password: formData.password,
+      options: {
+        data: {
+          full_name: formData.name,
+        },
+      },
+    });
+
+    if (error) {
+      setErrorMessage(error.message);
+      setIsSubmitting(false);
+      return;
+    }
+
+    // If email confirmation is enabled, session may be null.
+    if (!data.session) {
+      setSuccessMessage('Account created. Check your email to confirm your address, then log in.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Best-effort profile upsert
+    try {
+      if (data.user) {
+        await supabase.from('profiles').upsert({
+          id: data.user.id,
+          full_name: formData.name,
+          email: formData.email,
+        } as any);
+      }
+    } catch (error) {
+      console.warn('Failed to upsert profile (non-fatal):', error);
+    }
+
     router.push('/dashboard');
   };
 
@@ -55,6 +103,16 @@ export default function SignUpPage() {
 
           {/* Sign Up Form */}
           <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg border border-[#E5E5E5] p-8">
+            {errorMessage && (
+              <div className="mb-5 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                {errorMessage}
+              </div>
+            )}
+            {successMessage && (
+              <div className="mb-5 p-3 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm">
+                {successMessage}
+              </div>
+            )}
             <div className="space-y-4">
               {/* Name */}
               <div>
@@ -162,10 +220,20 @@ export default function SignUpPage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                className="w-full py-3 px-6 bg-[#2D2D2D] text-white rounded-lg hover:bg-[#1a1a1a] transition-colors font-medium flex items-center justify-center gap-2"
+                disabled={isSubmitting}
+                className="w-full py-3 px-6 bg-[#2D2D2D] text-white rounded-lg hover:bg-[#1a1a1a] transition-colors font-medium flex items-center justify-center gap-2 disabled:bg-[#D1D1D1] disabled:cursor-not-allowed"
               >
-                Create Free Account
-                <ArrowRight className="w-5 h-5" />
+                {isSubmitting ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Creating account...
+                  </>
+                ) : (
+                  <>
+                    Create Free Account
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
               </button>
             </div>
           </form>

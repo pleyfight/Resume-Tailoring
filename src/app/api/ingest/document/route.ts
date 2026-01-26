@@ -1,28 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSupabase } from '@/lib/supabase';
+import { getAuthedSupabase } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = getServerSupabase();
-    
-    // Get user from auth header
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      return NextResponse.json(
-        { error: 'Missing authorization header' },
-        { status: 401 }
-      );
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const isConfigured = supabaseUrl && !supabaseUrl.includes('placeholder');
+
+    // Demo mode: If Supabase is not configured, simulate successful upload
+    if (!isConfigured) {
+      const formData = await request.formData();
+      const file = formData.get('file') as File;
+      if (!file) {
+        return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+      }
+
+      return NextResponse.json({
+        success: true,
+        demo: true,
+        message: 'Demo mode: File upload simulated. Configure Supabase for real uploads.',
+        data: {
+          id: `demo-${Date.now()}`,
+          file_url: `demo://uploads/${file.name}`,
+          uploaded_at: new Date().toISOString(),
+          has_parsed_text: file.type === 'text/plain',
+        },
+      });
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    const auth = await getAuthedSupabase(request);
+    if (auth.error || !auth.user || !auth.supabase) {
+      return NextResponse.json({ error: 'Unauthorized', details: auth.error }, { status: 401 });
     }
+
+    const supabase = auth.supabase;
+    const user = auth.user;
 
     // Get the uploaded file
     const formData = await request.formData();
@@ -40,12 +51,13 @@ export async function POST(request: NextRequest) {
       'application/pdf',
       'application/msword',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'text/plain'
+      'text/plain',
+      'application/vnd.apple.pages'
     ];
 
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
-        { error: 'Invalid file type. Allowed: PDF, DOC, DOCX, TXT' },
+        { error: 'Invalid file type. Allowed: PDF, DOC, DOCX, TXT, PAGES' },
         { status: 400 }
       );
     }
@@ -91,7 +103,7 @@ export async function POST(request: NextRequest) {
 
     // TODO: In production, implement text extraction here
     // For now, we'll just save the reference
-    let parsedText = null;
+    let parsedText: string | null = null;
     
     // Future implementation placeholder:
     // if (file.type === 'application/pdf') {
@@ -99,6 +111,10 @@ export async function POST(request: NextRequest) {
     // } else if (file.type === 'text/plain') {
     //   parsedText = buffer.toString('utf-8');
     // }
+
+    if (file.type === 'text/plain') {
+      parsedText = buffer.toString('utf-8');
+    }
 
     // Save document reference to database
     const { data: documentData, error: documentError } = await supabase
@@ -144,26 +160,20 @@ export async function POST(request: NextRequest) {
 // GET endpoint to retrieve uploaded documents
 export async function GET(request: NextRequest) {
   try {
-    const supabase = getServerSupabase();
-    
-    // Get user from auth header
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      return NextResponse.json(
-        { error: 'Missing authorization header' },
-        { status: 401 }
-      );
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const isConfigured = supabaseUrl && !supabaseUrl.includes('placeholder');
+
+    if (!isConfigured) {
+      return NextResponse.json({ success: true, demo: true, documents: [] });
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    const auth = await getAuthedSupabase(request);
+    if (auth.error || !auth.user || !auth.supabase) {
+      return NextResponse.json({ error: 'Unauthorized', details: auth.error }, { status: 401 });
     }
+
+    const supabase = auth.supabase;
+    const user = auth.user;
 
     // Fetch user's documents
     const { data: documents, error: fetchError } = await supabase

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getAuthedSupabase } from '@/lib/auth';
 
 interface GenerateRequest {
   jobDescription: string;
@@ -73,6 +74,14 @@ export async function POST(request: NextRequest) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const isSupabaseConfigured = supabaseUrl && !supabaseUrl.includes('placeholder');
 
+    const auth = isSupabaseConfigured ? await getAuthedSupabase(request) : null;
+    if (isSupabaseConfigured && (!auth || auth.error || !auth.user || !auth.supabase)) {
+      return NextResponse.json(
+        { error: 'Unauthorized', details: auth?.error || 'Missing or invalid token' },
+        { status: 401 }
+      );
+    }
+
     // If Gemini is not configured, return demo response
     if (!isGeminiConfigured) {
       console.log('Demo mode: Gemini API not configured');
@@ -99,10 +108,8 @@ export async function POST(request: NextRequest) {
         demoData.skills || []
       );
     } else if (isSupabaseConfigured) {
-      // Fetch from Supabase
-      const { getServerSupabase } = await import('@/lib/supabase');
-      const supabase = getServerSupabase();
-      const userId = '00000000-0000-0000-0000-000000000000';
+      const supabase = auth!.supabase!;
+      const userId = auth!.user!.id;
 
       if (useDocuments) {
         const { data: documents, error: docsError } = await supabase
@@ -125,39 +132,34 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        userContext = documents
+        const documentContext = documents
           .filter((doc: any) => doc.parsed_text)
           .map((doc: any) => doc.parsed_text)
           .join('\n\n---\n\n');
 
-        if (!userContext) {
-          return NextResponse.json(
-            { error: 'No parsed text available from uploaded documents.' },
-            { status: 400 }
-          );
+        if (documentContext) {
+          userContext = documentContext;
+        } else {
+          // Fallback to manual entries if extraction isn't available yet
+          const manualContext = await buildUserContextFromSupabase(supabase, userId);
+          if (!manualContext) {
+            return NextResponse.json(
+              { error: 'No parsed text available from uploaded documents. Upload a TXT resume or use manual entry.' },
+              { status: 400 }
+            );
+          }
+          userContext = manualContext;
         }
       } else {
-        // Fetch from manual entries
-        const [profileResult, workResult, eduResult, skillsResult] = await Promise.all([
-          supabase.from('profiles').select('*').eq('id', userId).single(),
-          supabase.from('work_experiences').select('*').eq('user_id', userId).order('start_date', { ascending: false }),
-          supabase.from('educations').select('*').eq('user_id', userId).order('start_date', { ascending: false }),
-          supabase.from('skills').select('*').eq('user_id', userId)
-        ]);
-
-        const profile = profileResult.data;
-        const workExperiences = workResult.data || [];
-        const educations = eduResult.data || [];
-        const skills = skillsResult.data || [];
-
-        if (!profile && workExperiences.length === 0 && educations.length === 0) {
+        const manualContext = await buildUserContextFromSupabase(supabase, userId);
+        if (!manualContext) {
           return NextResponse.json(
             { error: 'No user data found. Please add your information first.' },
             { status: 404 }
           );
         }
 
-        userContext = buildUserContextFromManualData(profile, workExperiences, educations, skills);
+        userContext = manualContext;
       }
     } else {
       // No Supabase and no demo data - use a generic context
@@ -244,9 +246,30 @@ Focus on making the resume ATS-friendly while showcasing the candidate's unique 
       );
     }
 
+    // Best-effort persistence (non-fatal if migrations aren't applied yet)
+    let savedResumeId: string | null = null;
+    if (isSupabaseConfigured && auth?.supabase && auth?.user) {
+      try {
+        const { data: saved, error: saveError } = await auth.supabase
+          .from('generated_resumes')
+          .insert({
+            user_id: auth.user.id,
+            target_job_description: jobDescription,
+            tailored_json: tailoredResume as any,
+          } as any)
+          .select('id')
+          .single();
+
+        if (!saveError && saved) savedResumeId = (saved as any).id;
+      } catch (error) {
+        console.warn('Failed to save generated resume (non-fatal):', error);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       tailoredResume,
+      savedResumeId,
       generatedAt: new Date().toISOString()
     });
 
@@ -338,4 +361,21 @@ function buildUserContextFromManualData(
   }
 
   return context || 'No background information provided.';
+}
+
+async function buildUserContextFromSupabase(supabase: any, userId: string): Promise<string | null> {
+  const [profileResult, workResult, eduResult, skillsResult] = await Promise.all([
+    supabase.from('profiles').select('*').eq('id', userId).single(),
+    supabase.from('work_experiences').select('*').eq('user_id', userId).order('start_date', { ascending: false }),
+    supabase.from('educations').select('*').eq('user_id', userId).order('start_date', { ascending: false }),
+    supabase.from('skills').select('*').eq('user_id', userId),
+  ]);
+
+  const profile = profileResult.data;
+  const workExperiences = workResult.data || [];
+  const educations = eduResult.data || [];
+  const skills = skillsResult.data || [];
+
+  if (!profile && workExperiences.length === 0 && educations.length === 0) return null;
+  return buildUserContextFromManualData(profile, workExperiences, educations, skills);
 }

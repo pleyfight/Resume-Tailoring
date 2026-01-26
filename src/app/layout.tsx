@@ -1,16 +1,17 @@
 ﻿import type { Metadata } from "next";
-import { Inter, Instrument_Serif } from "next/font/google";
+import { Space_Grotesk, Newsreader } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-body",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const instrumentSerif = Instrument_Serif({
-  variable: "--font-serif",
+const newsreader = Newsreader({
+  variable: "--font-display",
   subsets: ["latin"],
-  weight: ["400"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -26,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${instrumentSerif.variable} antialiased`}
+        className={`${spaceGrotesk.variable} ${newsreader.variable} antialiased`}
       >
         {children}
       </body>

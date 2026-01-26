@@ -21,12 +21,9 @@ Run these SQL files in Supabase SQL Editor (in order):
 2. `supabase/migrations/002_storage_setup.sql`
 3. `supabase/migrations/003_generated_resumes.sql`
 
-Create demo user:
-```sql
-INSERT INTO public.profiles (id, full_name, email)
-VALUES ('00000000-0000-0000-0000-000000000000', 'Demo User', 'demo@example.com')
-ON CONFLICT (id) DO NOTHING;
-```
+Create a test user:
+- Start the app and sign up at `/signup`
+- After login, open `/dashboard`
 
 ### 3. Storage Setup
 In Supabase Dashboard → Storage:
@@ -48,7 +45,7 @@ Open: http://localhost:3000/dashboard
 | Resource | URL |
 |----------|-----|
 | Dashboard | http://localhost:3000/dashboard |
-| Upload API | POST /api/ingest/upload |
+| Upload API | POST /api/ingest/document |
 | Manual API | POST /api/ingest/manual |
 | Generate API | POST /api/generate |
 
@@ -96,7 +93,8 @@ Open: http://localhost:3000/dashboard
 
 ### Upload Resume
 ```bash
-curl -X POST http://localhost:3000/api/ingest/upload \
+curl -X POST http://localhost:3000/api/ingest/document \
+  -H "Authorization: Bearer YOUR_USER_TOKEN" \
   -F "file=@resume.pdf"
 ```
 
@@ -243,32 +241,22 @@ npm run lint         # Run ESLint
 # Run migrations in Supabase SQL Editor
 
 # Testing
-curl localhost:3000/api/generate -d '{"jobDescription":"test"}'
+curl -X POST http://localhost:3000/api/generate \
+  -H "Authorization: Bearer YOUR_USER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"jobDescription":"test"}'
 ```
-
----
-
-## 🔐 MVP User ID
-
-For testing without auth:
-```
-00000000-0000-0000-0000-000000000000
-```
-
-All API routes currently use this demo user.
 
 ---
 
 ## 🎯 Next Production Steps
 
-1. [ ] Add real authentication
-2. [ ] Implement PDF text extraction
-3. [ ] Generate professional PDF output
-4. [ ] Save generated resumes to DB
-5. [ ] Add rate limiting
-6. [ ] Implement error logging
-7. [ ] Add user profiles
-8. [ ] Deploy to Vercel
+1. [ ] Implement PDF/DOCX text extraction
+2. [ ] Improve PDF output formatting
+3. [ ] Add rate limiting / quotas
+4. [ ] Add error logging/monitoring
+5. [ ] Add resume history UI (uses `generated_resumes`)
+6. [ ] Deploy to Vercel
 
 ---
 
@@ -282,6 +270,6 @@ All API routes currently use this demo user.
 
 ---
 
-**Built with Next.js 14 + Supabase + Google Gemini AI**
+**Built with Next.js 16 + Supabase + Google Gemini AI**
 
 For detailed documentation, see `COMPLETE_IMPLEMENTATION.md`

@@ -1,7 +1,8 @@
 ﻿'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Upload, Plus, Trash2, CheckCircle, X } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 interface IngestionFormProps {
   onContextTypeChange: (useDocuments: boolean) => void;
@@ -49,11 +50,28 @@ interface FormData {
   skills: Skill[];
 }
 
+const ALLOWED_MIME_TYPES = new Set([
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/plain',
+  'application/vnd.apple.pages',
+]);
+
+const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx', '.txt', '.pages'];
+
+const isAllowedFile = (file: File) => {
+  const lowerName = file.name.toLowerCase();
+  const hasAllowedExtension = ALLOWED_EXTENSIONS.some((ext) => lowerName.endsWith(ext));
+  return ALLOWED_MIME_TYPES.has(file.type) || hasAllowedExtension;
+};
+
 export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataChange }: IngestionFormProps) {
   const [activeTab, setActiveTab] = useState<'upload' | 'manual'>('manual');
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isManualDragOver, setIsManualDragOver] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
 
@@ -128,8 +146,15 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
     formData.append('file', file);
 
     try {
-      const response = await fetch('/api/ingest/upload', {
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      if (!accessToken) throw new Error('Please log in to upload documents.');
+
+      const response = await fetch('/api/ingest/document', {
         method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: formData,
       });
 
@@ -155,25 +180,57 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
     }
   };
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     
     const file = e.dataTransfer.files[0];
-    if (file && (file.type === 'application/pdf' || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')) {
+    if (file && isAllowedFile(file)) {
       handleFileUpload(file);
     } else {
-      setToastMessage(' Please upload a PDF or DOCX file');
+      setToastMessage(' Please upload a DOC, DOCX, PDF, TXT, or PAGES file');
       setShowSuccessToast(true);
     }
-  }, []);
+  };
+
+  const handleManualDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (Array.from(e.dataTransfer.types).includes('Files')) {
+      setIsManualDragOver(true);
+    }
+  };
+
+  const handleManualDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsManualDragOver(false);
+  };
+
+  const handleManualDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsManualDragOver(false);
+
+    const file = e.dataTransfer.files[0];
+    if (file && isAllowedFile(file)) {
+      handleTabChange('upload');
+      handleFileUpload(file);
+      return;
+    }
+
+    setToastMessage(' Please upload a DOC, DOCX, PDF, TXT, or PAGES file');
+    setShowSuccessToast(true);
+  };
 
   const handleSaveManual = async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      if (!accessToken) throw new Error('Please log in to save your information.');
+
       const response = await fetch('/api/ingest/manual', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           profile,
@@ -199,18 +256,18 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-[#E5E5E5] overflow-hidden relative">
+    <div className="bg-[#FFFCF7] rounded-3xl shadow-[0_18px_40px_rgba(20,16,12,0.08)] border border-[#E4D7CA] overflow-hidden relative">
       {/* Success Toast */}
       {showSuccessToast && (
-        <div className="absolute top-4 left-4 right-4 z-50 animate-in fade-in slide-in-from-top-2">
-          <div className="bg-white border border-green-200 shadow-lg rounded-lg p-4 flex items-center justify-between">
+        <div className="absolute top-4 left-4 right-4 z-50 animate-[fade-up_0.4s_ease-out]">
+          <div className="bg-[#FFFCF7] border border-[#E4D7CA] shadow-lg rounded-2xl p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <CheckCircle className="w-5 h-5 text-green-600" />
-              <span className="text-sm font-medium text-[#2D2D2D]">{toastMessage}</span>
+              <CheckCircle className="w-5 h-5 text-[#8B5B2B]" />
+              <span className="text-sm font-medium text-[#1B1712]">{toastMessage}</span>
             </div>
             <button
               onClick={() => setShowSuccessToast(false)}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-[#8B7B6C] hover:text-[#1B1712]"
             >
               <X className="w-4 h-4" />
             </button>
@@ -219,13 +276,13 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
       )}
 
       {/* Tabs */}
-      <div className="flex border-b border-[#E5E5E5]">
+      <div className="flex border-b border-[#E4D7CA] bg-[#FFF9F1]">
         <button
           onClick={() => handleTabChange('manual')}
           className={`flex-1 px-6 py-4 font-medium transition-colors ${
             activeTab === 'manual'
-              ? 'text-[#2D2D2D] border-b-2 border-[#2D2D2D]'
-              : 'text-[#999] hover:text-[#6B6B6B]'
+              ? 'text-[#1B1712] border-b-2 border-[#1B1712]'
+              : 'text-[#8B7B6C] hover:text-[#1B1712]'
           }`}
         >
           Manual Entry
@@ -234,8 +291,8 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
           onClick={() => handleTabChange('upload')}
           className={`flex-1 px-6 py-4 font-medium transition-colors ${
             activeTab === 'upload'
-              ? 'text-[#2D2D2D] border-b-2 border-[#2D2D2D]'
-              : 'text-[#999] hover:text-[#6B6B6B]'
+              ? 'text-[#1B1712] border-b-2 border-[#1B1712]'
+              : 'text-[#8B7B6C] hover:text-[#1B1712]'
           }`}
         >
           Upload Resume
@@ -254,20 +311,20 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
               onDrop={handleDrop}
               className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
                 isDragging
-                  ? 'border-[#2D2D2D] bg-[#F7F5F3]'
-                  : 'border-[#D1D1D1] hover:border-[#999]'
+                  ? 'border-[#1B1712] bg-[#F7F2EA]'
+                  : 'border-[#D9CBBE] hover:border-[#8B7B6C]'
               }`}
             >
-              <Upload className="w-12 h-12 mx-auto mb-4 text-[#999]" />
-              <p className="text-[#2D2D2D] font-medium mb-2">
+              <Upload className="w-12 h-12 mx-auto mb-4 text-[#8B7B6C]" />
+              <p className="text-[#1B1712] font-medium mb-2">
                 Drop your resume here, or click to browse
               </p>
-              <p className="text-sm text-[#999] mb-4">
-                Supports PDF and DOCX files
+              <p className="text-sm text-[#6F6257] mb-4">
+                Supports DOC, DOCX, PDF, TXT, and PAGES files
               </p>
               <input
                 type="file"
-                accept=".pdf,.docx"
+                accept=".pdf,.doc,.docx,.txt,.pages"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) handleFileUpload(file);
@@ -277,7 +334,7 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
               />
               <label
                 htmlFor="file-upload"
-                className="inline-block px-6 py-2 bg-[#2D2D2D] text-white rounded-lg cursor-pointer hover:bg-[#1a1a1a] transition-colors"
+                className="inline-block px-6 py-2 bg-[#1B1712] text-white rounded-lg cursor-pointer hover:bg-[#2C241C] transition-colors"
               >
                 Choose File
               </label>
@@ -286,12 +343,12 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
             {uploadProgress > 0 && (
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-[#6B6B6B]">{uploadedFile?.name}</span>
-                  <span className="text-[#2D2D2D] font-medium">{uploadProgress}%</span>
+                  <span className="text-[#6F6257]">{uploadedFile?.name}</span>
+                  <span className="text-[#1B1712] font-medium">{uploadProgress}%</span>
                 </div>
-                <div className="h-2 bg-[#E5E5E5] rounded-full overflow-hidden">
+                <div className="h-2 bg-[#E4D7CA] rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-[#2D2D2D] transition-all duration-300"
+                    className="h-full bg-[#1B1712] transition-all duration-300"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>
@@ -299,12 +356,26 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
             )}
           </div>
         ) : (
-          <div className="space-y-6">
+          <div
+            className="relative"
+            onDragOver={handleManualDragOver}
+            onDragLeave={handleManualDragLeave}
+            onDrop={handleManualDrop}
+          >
+            {isManualDragOver && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-[#F7F2EA]/80">
+                <div className="flex flex-col items-center gap-2 text-sm font-semibold text-[#1B1712] animate-[pulse-soft_1.2s_ease-in-out_infinite]">
+                  <Upload className="h-6 w-6 text-[#8B5B2B]" />
+                  Upload resume
+                </div>
+              </div>
+            )}
+            <div className={`space-y-6 ${isManualDragOver ? 'pointer-events-none opacity-60' : ''}`}>
             {/* Basic Info Accordion */}
             <details className="group" open>
-              <summary className="flex justify-between items-center cursor-pointer list-none font-serif text-lg font-semibold text-[#2D2D2D] mb-4">
+              <summary className="flex justify-between items-center cursor-pointer list-none font-serif text-lg font-semibold text-[#1B1712] mb-4">
                 Basic Information
-                <span className="text-[#999] group-open:rotate-180 transition-transform"></span>
+                <span className="text-[#8B7B6C] group-open:rotate-180 transition-transform"></span>
               </summary>
               <div className="space-y-4">
                 <input
@@ -312,7 +383,7 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
                   placeholder="Full Name"
                   value={profile.full_name}
                   onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
-                  className="w-full px-4 py-2 border border-[#D1D1D1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D2D2D]"
+                  className="w-full px-4 py-2 border border-[#D9CBBE] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8B5B2B]/20 focus:border-[#8B5B2B]"
                 />
                 <div className="grid grid-cols-2 gap-4">
                   <input
@@ -320,14 +391,14 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
                     placeholder="Email"
                     value={profile.email}
                     onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                    className="px-4 py-2 border border-[#D1D1D1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D2D2D]"
+                    className="px-4 py-2 border border-[#D9CBBE] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8B5B2B]/20 focus:border-[#8B5B2B]"
                   />
                   <input
                     type="tel"
                     placeholder="Phone"
                     value={profile.phone}
                     onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                    className="px-4 py-2 border border-[#D1D1D1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D2D2D]"
+                    className="px-4 py-2 border border-[#D9CBBE] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8B5B2B]/20 focus:border-[#8B5B2B]"
                   />
                 </div>
                 <input
@@ -335,36 +406,36 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
                   placeholder="LinkedIn URL"
                   value={profile.linkedin_url}
                   onChange={(e) => setProfile({ ...profile, linkedin_url: e.target.value })}
-                  className="w-full px-4 py-2 border border-[#D1D1D1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D2D2D]"
+                  className="w-full px-4 py-2 border border-[#D9CBBE] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8B5B2B]/20 focus:border-[#8B5B2B]"
                 />
                 <input
                   type="url"
                   placeholder="Portfolio URL"
                   value={profile.portfolio_url}
                   onChange={(e) => setProfile({ ...profile, portfolio_url: e.target.value })}
-                  className="w-full px-4 py-2 border border-[#D1D1D1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D2D2D]"
+                  className="w-full px-4 py-2 border border-[#D9CBBE] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8B5B2B]/20 focus:border-[#8B5B2B]"
                 />
                 <textarea
                   placeholder="Professional Summary"
                   value={profile.summary_bio}
                   onChange={(e) => setProfile({ ...profile, summary_bio: e.target.value })}
                   rows={4}
-                  className="w-full px-4 py-2 border border-[#D1D1D1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D2D2D] resize-none"
+                  className="w-full px-4 py-2 border border-[#D9CBBE] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8B5B2B]/20 focus:border-[#8B5B2B] resize-none"
                 />
               </div>
             </details>
 
-            {/* Work Experience Accordion */}
+            {/* Work History Accordion */}
             <details className="group">
-              <summary className="flex justify-between items-center cursor-pointer list-none font-serif text-lg font-semibold text-[#2D2D2D] mb-4">
-                Work Experience
-                <span className="text-[#999] group-open:rotate-180 transition-transform"></span>
+              <summary className="flex justify-between items-center cursor-pointer list-none font-serif text-lg font-semibold text-[#1B1712] mb-4">
+                Work History
+                <span className="text-[#8B7B6C] group-open:rotate-180 transition-transform"></span>
               </summary>
               <div className="space-y-4">
                 {workExperiences.map((exp, index) => (
-                  <div key={index} className="p-4 border border-[#E5E5E5] rounded-lg space-y-3">
+                  <div key={index} className="p-4 border border-[#E4D7CA] rounded-lg space-y-3">
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-medium text-[#6B6B6B]">Position {index + 1}</span>
+                      <span className="text-sm font-medium text-[#6F6257]">Position {index + 1}</span>
                       {workExperiences.length > 1 && (
                         <button
                           onClick={() => setWorkExperiences(workExperiences.filter((_, i) => i !== index))}
@@ -383,7 +454,7 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
                         updated[index].company = e.target.value;
                         setWorkExperiences(updated);
                       }}
-                      className="w-full px-3 py-2 border border-[#D1D1D1] rounded focus:outline-none focus:ring-2 focus:ring-[#2D2D2D]"
+                      className="w-full px-3 py-2 border border-[#D9CBBE] rounded focus:outline-none focus:ring-2 focus:ring-[#8B5B2B]/20 focus:border-[#8B5B2B]"
                     />
                     <input
                       type="text"
@@ -394,7 +465,7 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
                         updated[index].job_title = e.target.value;
                         setWorkExperiences(updated);
                       }}
-                      className="w-full px-3 py-2 border border-[#D1D1D1] rounded focus:outline-none focus:ring-2 focus:ring-[#2D2D2D]"
+                      className="w-full px-3 py-2 border border-[#D9CBBE] rounded focus:outline-none focus:ring-2 focus:ring-[#8B5B2B]/20 focus:border-[#8B5B2B]"
                     />
                     <input
                       type="text"
@@ -405,7 +476,7 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
                         updated[index].location = e.target.value;
                         setWorkExperiences(updated);
                       }}
-                      className="w-full px-3 py-2 border border-[#D1D1D1] rounded focus:outline-none focus:ring-2 focus:ring-[#2D2D2D]"
+                      className="w-full px-3 py-2 border border-[#D9CBBE] rounded focus:outline-none focus:ring-2 focus:ring-[#8B5B2B]/20 focus:border-[#8B5B2B]"
                     />
                     <div className="grid grid-cols-2 gap-3">
                       <input
@@ -417,7 +488,7 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
                           updated[index].start_date = e.target.value;
                           setWorkExperiences(updated);
                         }}
-                        className="px-3 py-2 border border-[#D1D1D1] rounded focus:outline-none focus:ring-2 focus:ring-[#2D2D2D]"
+                        className="px-3 py-2 border border-[#D9CBBE] rounded focus:outline-none focus:ring-2 focus:ring-[#8B5B2B]/20 focus:border-[#8B5B2B]"
                       />
                       <input
                         type="date"
@@ -429,7 +500,7 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
                           setWorkExperiences(updated);
                         }}
                         disabled={exp.is_current}
-                        className="px-3 py-2 border border-[#D1D1D1] rounded focus:outline-none focus:ring-2 focus:ring-[#2D2D2D] disabled:bg-[#F7F5F3]"
+                        className="px-3 py-2 border border-[#D9CBBE] rounded focus:outline-none focus:ring-2 focus:ring-[#8B5B2B]/20 focus:border-[#8B5B2B] disabled:bg-[#F7F2EA]"
                       />
                     </div>
                     <label className="flex items-center gap-2 text-sm">
@@ -444,7 +515,7 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
                         }}
                         className="rounded"
                       />
-                      <span className="text-[#6B6B6B]">I currently work here</span>
+                      <span className="text-[#6F6257]">I currently work here</span>
                     </label>
                     <textarea
                       placeholder="Duties (What you did on a daily basis)"
@@ -455,7 +526,7 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
                         setWorkExperiences(updated);
                       }}
                       rows={3}
-                      className="w-full px-3 py-2 border border-[#D1D1D1] rounded focus:outline-none focus:ring-2 focus:ring-[#2D2D2D] resize-none"
+                      className="w-full px-3 py-2 border border-[#D9CBBE] rounded focus:outline-none focus:ring-2 focus:ring-[#8B5B2B]/20 focus:border-[#8B5B2B] resize-none"
                     />
                     <textarea
                       placeholder=" Key Achievements (I increased X by Y%, Led Z initiative...)"
@@ -481,7 +552,7 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
                     duties: '',
                     achievements: '',
                   }])}
-                  className="w-full py-2 border-2 border-dashed border-[#D1D1D1] rounded-lg text-[#6B6B6B] hover:border-[#2D2D2D] hover:text-[#2D2D2D] transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-2 border-2 border-dashed border-[#D9CBBE] rounded-lg text-[#6F6257] hover:border-[#1B1712] hover:text-[#1B1712] transition-colors flex items-center justify-center gap-2"
                 >
                   <Plus className="w-4 h-4" />
                   Add Another Position
@@ -489,17 +560,17 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
               </div>
             </details>
 
-            {/* Education & Skills */}
+            {/* Skills */}
             <details className="group">
-              <summary className="flex justify-between items-center cursor-pointer list-none font-serif text-lg font-semibold text-[#2D2D2D] mb-4">
-                Education & Skills
-                <span className="text-[#999] group-open:rotate-180 transition-transform"></span>
+              <summary className="flex justify-between items-center cursor-pointer list-none font-serif text-lg font-semibold text-[#1B1712] mb-4">
+                Skills & Education
+                <span className="text-[#8B7B6C] group-open:rotate-180 transition-transform"></span>
               </summary>
               <div className="space-y-4">
                 <div className="space-y-3">
-                  <h4 className="font-medium text-[#2D2D2D]">Education</h4>
+                  <h4 className="font-medium text-[#1B1712]">Education</h4>
                   {educations.map((edu, index) => (
-                    <div key={index} className="p-4 border border-[#E5E5E5] rounded-lg space-y-3">
+                    <div key={index} className="p-4 border border-[#E4D7CA] rounded-lg space-y-3">
                       <input
                         type="text"
                         placeholder="Institution"
@@ -509,7 +580,7 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
                           updated[index].institution = e.target.value;
                           setEducations(updated);
                         }}
-                        className="w-full px-3 py-2 border border-[#D1D1D1] rounded focus:outline-none focus:ring-2 focus:ring-[#2D2D2D]"
+                        className="w-full px-3 py-2 border border-[#D9CBBE] rounded focus:outline-none focus:ring-2 focus:ring-[#8B5B2B]/20 focus:border-[#8B5B2B]"
                       />
                       <div className="grid grid-cols-2 gap-3">
                         <input
@@ -521,7 +592,7 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
                             updated[index].degree = e.target.value;
                             setEducations(updated);
                           }}
-                          className="px-3 py-2 border border-[#D1D1D1] rounded focus:outline-none focus:ring-2 focus:ring-[#2D2D2D]"
+                          className="px-3 py-2 border border-[#D9CBBE] rounded focus:outline-none focus:ring-2 focus:ring-[#8B5B2B]/20 focus:border-[#8B5B2B]"
                         />
                         <input
                           type="text"
@@ -532,7 +603,7 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
                             updated[index].field_of_study = e.target.value;
                             setEducations(updated);
                           }}
-                          className="px-3 py-2 border border-[#D1D1D1] rounded focus:outline-none focus:ring-2 focus:ring-[#2D2D2D]"
+                          className="px-3 py-2 border border-[#D9CBBE] rounded focus:outline-none focus:ring-2 focus:ring-[#8B5B2B]/20 focus:border-[#8B5B2B]"
                         />
                       </div>
                     </div>
@@ -540,7 +611,7 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
                 </div>
 
                 <div className="space-y-3">
-                  <h4 className="font-medium text-[#2D2D2D]">Skills</h4>
+                  <h4 className="font-medium text-[#1B1712]">Skills</h4>
                   {skills.map((skill, index) => (
                     <div key={index} className="flex gap-3 items-center">
                       <input
@@ -552,7 +623,7 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
                           updated[index].name = e.target.value;
                           setSkills(updated);
                         }}
-                        className="flex-1 px-3 py-2 border border-[#D1D1D1] rounded focus:outline-none focus:ring-2 focus:ring-[#2D2D2D]"
+                        className="flex-1 px-3 py-2 border border-[#D9CBBE] rounded focus:outline-none focus:ring-2 focus:ring-[#8B5B2B]/20 focus:border-[#8B5B2B]"
                       />
                       <select
                         value={skill.category}
@@ -561,7 +632,7 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
                           updated[index].category = e.target.value as 'Hard' | 'Soft' | 'Tool';
                           setSkills(updated);
                         }}
-                        className="px-3 py-2 border border-[#D1D1D1] rounded focus:outline-none focus:ring-2 focus:ring-[#2D2D2D]"
+                        className="px-3 py-2 border border-[#D9CBBE] rounded focus:outline-none focus:ring-2 focus:ring-[#8B5B2B]/20 focus:border-[#8B5B2B]"
                       >
                         <option value="Hard">Technical</option>
                         <option value="Tool">Tool</option>
@@ -571,7 +642,7 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
                   ))}
                   <button
                     onClick={() => setSkills([...skills, { name: '', category: 'Hard', proficiency: 50 }])}
-                    className="w-full py-2 border-2 border-dashed border-[#D1D1D1] rounded-lg text-[#6B6B6B] hover:border-[#2D2D2D] hover:text-[#2D2D2D] transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-2 border-2 border-dashed border-[#D9CBBE] rounded-lg text-[#6F6257] hover:border-[#1B1712] hover:text-[#1B1712] transition-colors flex items-center justify-center gap-2"
                   >
                     <Plus className="w-4 h-4" />
                     Add Skill
@@ -582,10 +653,11 @@ export function IngestionForm({ onContextTypeChange, useDocuments, onFormDataCha
 
             <button
               onClick={handleSaveManual}
-              className="w-full py-3 bg-[#2D2D2D] text-white rounded-lg hover:bg-[#1a1a1a] transition-colors font-medium"
+              className="w-full py-3 bg-[#1B1712] text-white rounded-full hover:bg-[#2C241C] transition-colors font-medium"
             >
               Save Information
             </button>
+            </div>
           </div>
         )}
       </div>

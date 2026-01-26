@@ -13,7 +13,7 @@ An AI-powered resume tailoring system that helps users create targeted, ATS-frie
 
 ## 🛠️ Tech Stack
 
-- **Frontend:** Next.js 14 (App Router), React 19, TailwindCSS
+- **Frontend:** Next.js 16 (App Router), React 19, TailwindCSS
 - **Backend:** Next.js API Routes
 - **Database:** Supabase (PostgreSQL)
 - **Storage:** Supabase Storage

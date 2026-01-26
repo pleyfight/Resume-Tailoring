@@ -1,5 +1,5 @@
 ﻿import { NextRequest } from 'next/server';
-import { getServerSupabase } from './supabase';
+import { getAuthedServerSupabase } from './supabase';
 
 export interface AuthResult {
   user: {
@@ -7,6 +7,19 @@ export interface AuthResult {
     email?: string;
   } | null;
   error: string | null;
+}
+
+export interface AuthedSupabaseResult extends AuthResult {
+  token: string | null;
+  supabase: ReturnType<typeof getAuthedServerSupabase> | null;
+}
+
+function getBearerToken(request: NextRequest): string | null {
+  const authHeader = request.headers.get('authorization');
+  if (!authHeader) return null;
+
+  const match = authHeader.match(/^Bearer\s+(.+)$/i);
+  return match?.[1]?.trim() || null;
 }
 
 /**
@@ -17,26 +30,37 @@ export interface AuthResult {
  * @returns Object with user data or error message
  */
 export async function authenticateRequest(request: NextRequest): Promise<AuthResult> {
-  const authHeader = request.headers.get('authorization');
-  
-  if (!authHeader) {
-    return { user: null, error: 'Missing authorization header' };
-  }
+  const token = getBearerToken(request);
+  if (!token) return { user: null, error: 'Missing authorization header' };
 
-  const token = authHeader.replace('Bearer ', '');
-  
   try {
-    const supabase = getServerSupabase();
+    const supabase = getAuthedServerSupabase(token);
     const { data: { user }, error } = await supabase.auth.getUser(token);
 
     if (error || !user) {
       return { user: null, error: 'Invalid or expired token' };
     }
 
-    return { user, error: null };
+    return { user: { id: user.id, email: user.email }, error: null };
   } catch (error) {
     console.error('Authentication error:', error);
     return { user: null, error: 'Authentication failed' };
+  }
+}
+
+export async function getAuthedSupabase(request: NextRequest): Promise<AuthedSupabaseResult> {
+  const token = getBearerToken(request);
+  if (!token) return { user: null, token: null, supabase: null, error: 'Missing authorization header' };
+
+  try {
+    const supabase = getAuthedServerSupabase(token);
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+
+    if (error || !user) return { user: null, token, supabase: null, error: 'Invalid or expired token' };
+    return { user: { id: user.id, email: user.email }, token, supabase, error: null };
+  } catch (error) {
+    console.error('Authentication error:', error);
+    return { user: null, token, supabase: null, error: 'Authentication failed' };
   }
 }
 

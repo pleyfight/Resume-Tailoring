@@ -1,19 +1,61 @@
 @import "tailwindcss";
 
 :root {
-  --background: #F7F5F3; /* Warm Grey Background */
-  --foreground: #2D2D2D; /* Charcoal Text */
+  --paper: #F7F2EA;
+  --paper-2: #EFE7DC;
+  --ink: #1B1712;
+  --ink-muted: #6F6257;
+  --accent: #C29B6F;
+  --accent-strong: #8B5B2B;
+  --edge: #E4D7CA;
+  --highlight: #FFFCF7;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
-  --font-serif: var(--font-serif);
+  --color-background: var(--paper);
+  --color-foreground: var(--ink);
+  --font-sans: var(--font-body);
+  --font-serif: var(--font-display);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-inter), system-ui, sans-serif;
+  background-color: var(--paper);
+  background-image:
+    radial-gradient(1200px 600px at 10% -10%, rgba(194, 155, 111, 0.18), transparent 60%),
+    radial-gradient(900px 500px at 90% 0%, rgba(88, 103, 90, 0.16), transparent 55%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0));
+  color: var(--ink);
+  font-family: var(--font-body), sans-serif;
+}
+
+@keyframes fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes drift {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-12px);
+  }
 }

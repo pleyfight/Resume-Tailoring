@@ -8,7 +8,7 @@ I've successfully implemented a complete, production-ready MVP for ResumeAI - an
 
 ## 🏗️ Architecture Overview
 
-### **Frontend (Next.js 14 + TypeScript)**
+### **Frontend (Next.js 16 + TypeScript)**
 - ✅ Dashboard layout with responsive 12-column grid
 - ✅ Complete component library following Shadcn/Tailwind design system
 - ✅ Proper TypeScript typing throughout
@@ -42,7 +42,8 @@ I've successfully implemented a complete, production-ready MVP for ResumeAI - an
 - ✅ `src/lib/supabase.ts` - Updated with TypeScript generics for type safety
 
 ### **API Routes**
-- ✅ `src/app/api/ingest/upload/route.ts` - File upload handler (PDF/DOCX)
+- ✅ `src/app/api/ingest/document/route.ts` - Authenticated resume upload (PDF/DOC/DOCX/TXT)
+- ✅ `src/app/api/ingest/upload/route.ts` - Backwards-compatible alias to `/api/ingest/document`
 - ✅ `src/app/api/ingest/manual/route.ts` - Manual data ingestion (already existed, updated for MVP)
 - ✅ `src/app/api/generate/route.ts` - AI resume generation (already existed, updated for MVP)
 
@@ -94,14 +95,16 @@ Warning:    Amber-50/300 for achievements
 
 ## 🔌 API Endpoints
 
-### **POST /api/ingest/upload**
-**Purpose**: Upload PDF/DOCX resumes to Supabase Storage
+### **POST /api/ingest/document**
+**Purpose**: Upload resume documents (PDF, DOC, DOCX, TXT) to Supabase Storage
 
 **Input**: FormData with `file` field  
 **Output**: Document metadata (id, fileName, fileUrl, uploadedAt)
 
+**Auth**: Requires `Authorization: Bearer <access_token>`
+
 **Features**:
-- File type validation (PDF/DOCX only)
+- File type validation (PDF/DOC/DOCX/TXT)
 - Supabase Storage upload to `resumes` bucket
 - Metadata saved to `uploaded_documents` table
 - MVP: Placeholder for text extraction (production: use pdf-parse/mammoth)
@@ -197,18 +200,15 @@ Warning:    Amber-50/300 for achievements
 
 ## 🔐 Security & Auth
 
-**MVP Approach**:
-- Demo user ID: `00000000-0000-0000-0000-000000000000`
-- No authentication required for testing
-- All API routes use hardcoded demo user
+**Current Approach**:
+- Supabase Auth (email/password) for users
+- API routes validate Bearer tokens and scope reads/writes to the authenticated user
+- RLS policies are enabled in database migrations (verify in Supabase)
 
-**Production TODO**:
-- [ ] Implement Supabase Auth or NextAuth.js
-- [ ] Replace demo user ID with `auth.uid()`
-- [ ] Enable RLS policies for all tables
-- [ ] Add JWT validation in API routes
-- [ ] Implement rate limiting
-- [ ] Add CSRF protection
+**Remaining TODOs**:
+- [ ] Add OAuth providers (Google/GitHub) if desired
+- [ ] Implement rate limiting / quotas
+- [ ] Add error logging / monitoring
 
 ---
 
@@ -389,4 +389,4 @@ The ResumeAI application is **fully functional and production-ready** as an MVP.
 **API Routes**: 3 endpoints  
 **Database Tables**: 6 (1 new, 5 existing)
 
-Built with ❤️ following best practices for Next.js 14, TypeScript, and modern React patterns.
+Built with ❤️ following best practices for Next.js 16, TypeScript, and modern React patterns.

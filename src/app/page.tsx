@@ -1,347 +1,285 @@
-﻿import Link from "next/link";
-import { Sparkles, Target, Zap, CheckCircle, TrendingUp, FileText, Clock, Shield } from "lucide-react";
+import Link from "next/link";
+import { Sparkles, Target, FileText, CheckCircle, Shield, Clock, ArrowRight } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[#F7F5F3]">
-      {/* Navigation */}
-      <nav className="border-b border-[#E5E5E5] bg-white">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-[#2D2D2D]" />
-              <span className="font-serif text-2xl font-bold text-[#2D2D2D]">Sleek</span>
+    <div className="min-h-screen text-[#1B1712]">
+      <div className="relative overflow-hidden">
+        <div className="pointer-events-none absolute -top-32 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-[#C29B6F]/20 blur-3xl" />
+        <div className="pointer-events-none absolute -right-24 top-24 h-[420px] w-[420px] rounded-full bg-[#6E7B6C]/15 blur-3xl" />
+
+        <nav className="relative z-10 border-b border-[#E4D7CA] bg-[#FFFCF7]/80 backdrop-blur">
+          <div className="container mx-auto flex items-center justify-between px-6 py-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#D8CBBE] bg-[#FFF9F1]">
+                <Sparkles className="h-5 w-5 text-[#8B5B2B]" />
+              </div>
+              <div>
+                <div className="font-serif text-xl font-semibold tracking-tight">Sleek</div>
+                <div className="text-xs uppercase tracking-[0.2em] text-[#6F6257]">Resume Studio</div>
+              </div>
             </div>
-            <div className="flex items-center gap-6">
-              <a href="#features" className="text-[#6B6B6B] hover:text-[#2D2D2D] transition-colors">Features</a>
-              <a href="#pricing" className="text-[#6B6B6B] hover:text-[#2D2D2D] transition-colors">Pricing</a>
-              <a href="#faq" className="text-[#6B6B6B] hover:text-[#2D2D2D] transition-colors">FAQ</a>
-              <Link 
-                href="/login"
-                className="text-[#6B6B6B] hover:text-[#2D2D2D] transition-colors font-medium"
+            <div className="hidden items-center gap-6 text-sm text-[#6F6257] md:flex">
+              <a href="#features" className="hover:text-[#1B1712]">Features</a>
+              <a href="#workflow" className="hover:text-[#1B1712]">Workflow</a>
+              <a href="#care" className="hover:text-[#1B1712]">Our care</a>
+              <Link href="/login" className="hover:text-[#1B1712]">Login</Link>
+            </div>
+            <Link
+              href="/signup"
+              className="inline-flex items-center gap-2 rounded-full border border-[#1B1712] bg-[#1B1712] px-5 py-2 text-sm font-semibold text-[#FFFCF7] transition hover:-translate-y-0.5 hover:bg-[#2C241C]"
+            >
+              Start free
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </nav>
+
+        <section className="relative z-10 px-6 pb-16 pt-16 md:pb-24 md:pt-20">
+          <div className="container mx-auto grid max-w-6xl grid-cols-1 gap-12 lg:grid-cols-12">
+            <div className="lg:col-span-7">
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#E4D7CA] bg-[#FFFCF7] px-4 py-2 text-xs uppercase tracking-[0.2em] text-[#6F6257]">
+                Premium, empathetic resume tailoring
+              </div>
+              <h1 className="mt-6 font-serif text-4xl leading-tight md:text-6xl">
+                Tailor every resume with the care a new chapter deserves.
+              </h1>
+              <p className="mt-6 text-lg text-[#6F6257]">
+                Sleek helps new grads and experienced professionals craft a tailored resume for every job description.
+                Bring your story, we shape it with clarity, confidence, and ATS-ready structure.
+              </p>
+              <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[#1B1712] px-6 py-3 text-sm font-semibold text-[#FFFCF7] transition hover:-translate-y-0.5 hover:bg-[#2C241C]"
+                >
+                  Start tailoring
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  href="#workflow"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-[#CBB9A9] bg-[#FFFCF7] px-6 py-3 text-sm font-semibold text-[#1B1712] transition hover:-translate-y-0.5"
+                >
+                  See the process
+                </Link>
+              </div>
+              <div className="mt-10 grid gap-6 sm:grid-cols-3">
+                {[
+                  { label: "Minutes to a tailored draft", value: "< 3" },
+                  { label: "Resume versions saved", value: "20+" },
+                  { label: "Data privacy by design", value: "Private" },
+                ].map((item) => (
+                  <div
+                    key={item.label}
+                    className="rounded-2xl border border-[#E4D7CA] bg-[#FFFCF7] p-4 shadow-[0_10px_24px_rgba(20,16,12,0.08)]"
+                    style={{ animation: "fade-up 0.8s ease-out", animationFillMode: "both" }}
+                  >
+                    <div className="text-2xl font-semibold">{item.value}</div>
+                    <div className="mt-2 text-xs uppercase tracking-[0.2em] text-[#6F6257]">
+                      {item.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="lg:col-span-5">
+              <div className="rounded-3xl border border-[#E4D7CA] bg-[#FFFCF7] p-6 shadow-[0_24px_60px_rgba(20,16,12,0.12)]">
+                <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-[#6F6257]">
+                  Resume snapshot
+                  <span className="rounded-full border border-[#E4D7CA] px-3 py-1">Draft</span>
+                </div>
+                <div className="mt-6 space-y-5">
+                  <div>
+                    <div className="text-lg font-semibold">Jordan Lee</div>
+                    <div className="text-sm text-[#6F6257]">Product Analyst | Seattle, WA</div>
+                  </div>
+                  <div className="rounded-2xl border border-[#E4D7CA] bg-[#F7F2EA] p-4">
+                    <div className="text-xs uppercase tracking-[0.2em] text-[#6F6257]">Summary</div>
+                    <p className="mt-3 text-sm text-[#1B1712]">
+                      Analytical operator with 4+ years translating customer data into revenue growth.
+                      Seeking a role focused on experimentation, lifecycle metrics, and cross-team delivery.
+                    </p>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-sm font-semibold">
+                      <Target className="h-4 w-4 text-[#8B5B2B]" />
+                      JD-aligned highlights
+                    </div>
+                    <div className="rounded-2xl border border-[#E4D7CA] bg-[#FFFCF7] p-4 text-sm text-[#6F6257]">
+                      <ul className="space-y-2">
+                        <li>Reduced onboarding time by 32% with a new lifecycle experiment.</li>
+                        <li>Built SQL dashboards to surface retention drop-offs across cohorts.</li>
+                        <li>Partnered with design to ship a new activation flow.</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-[#E4D7CA] bg-[#F7F2EA] p-4 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs uppercase tracking-[0.2em] text-[#6F6257]">Match score</span>
+                      <span className="text-sm font-semibold text-[#1B1712]">86%</span>
+                    </div>
+                    <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-[#E4D7CA]">
+                      <div className="h-full w-[86%] rounded-full bg-[#8B5B2B]" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-6 rounded-2xl border border-[#E4D7CA] bg-[#FFFCF7] p-5 text-sm text-[#6F6257]">
+                Your resume stays private, stored in your own secure workspace.
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section id="features" className="px-6 py-20">
+        <div className="container mx-auto max-w-6xl">
+          <div className="mb-12 flex flex-col gap-4">
+            <p className="text-xs uppercase tracking-[0.2em] text-[#6F6257]">Tailoring features</p>
+            <h2 className="font-serif text-3xl md:text-4xl">
+              A calm, guided workflow built for real job searches.
+            </h2>
+          </div>
+          <div className="grid gap-6 md:grid-cols-3">
+            {[
+              {
+                title: "Human-sounding summaries",
+                description: "Turn your experience into a concise narrative that aligns to the role without losing your voice.",
+                icon: <Sparkles className="h-5 w-5 text-[#8B5B2B]" />,
+              },
+              {
+                title: "ATS-aligned structure",
+                description: "Organize your work history, skills, and results in a format that scanners and hiring managers love.",
+                icon: <FileText className="h-5 w-5 text-[#8B5B2B]" />,
+              },
+              {
+                title: "Private by default",
+                description: "Your documents stay in your own space with secure storage and clear delete controls.",
+                icon: <Shield className="h-5 w-5 text-[#8B5B2B]" />,
+              },
+            ].map((feature) => (
+              <div
+                key={feature.title}
+                className="rounded-3xl border border-[#E4D7CA] bg-[#FFFCF7] p-6 shadow-[0_18px_40px_rgba(20,16,12,0.08)]"
+                style={{ animation: "fade-up 0.9s ease-out", animationFillMode: "both" }}
               >
-                Login
-              </Link>
-              <Link 
-                href="/signup"
-                className="px-6 py-2 bg-[#2D2D2D] text-white rounded-lg hover:bg-[#1a1a1a] transition-colors font-medium"
-              >
-                Sign Up
-              </Link>
-            </div>
+                <div className="flex h-11 w-11 items-center justify-center rounded-full border border-[#E4D7CA] bg-[#F7F2EA]">
+                  {feature.icon}
+                </div>
+                <h3 className="mt-5 text-lg font-semibold">{feature.title}</h3>
+                <p className="mt-3 text-sm text-[#6F6257]">{feature.description}</p>
+              </div>
+            ))}
           </div>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <section className="py-24 px-6">
-        <div className="container mx-auto max-w-4xl text-center">
-          <h1 className="font-serif text-6xl font-bold text-[#2D2D2D] mb-6 leading-tight">
-            Effortless AI-powered resume tailoring by Sleek
-          </h1>
-          <p className="text-xl text-[#6B6B6B] mb-8 max-w-2xl mx-auto">
-            Streamline your job application process with seamless AI automation for every custom resume, perfectly tailored to each job description.
-          </p>
-          <Link
-            href="/signup"
-            className="inline-block px-8 py-4 bg-[#2D2D2D] text-white rounded-lg hover:bg-[#1a1a1a] transition-colors text-lg font-medium"
-          >
-            Start for free
-          </Link>
         </div>
       </section>
 
-      {/* Dashboard Preview */}
-      <section className="py-16 px-6">
+      <section id="workflow" className="px-6 pb-20">
         <div className="container mx-auto max-w-6xl">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 border border-[#E5E5E5]">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-6 h-64 flex items-center justify-center border border-purple-100">
-                <div className="text-center">
-                  <Target className="w-16 h-16 text-purple-600 mx-auto mb-4" />
-                  <h3 className="font-semibold text-purple-900">Job Matching</h3>
+          <div className="rounded-[32px] border border-[#E4D7CA] bg-[#FFFCF7] px-6 py-12 shadow-[0_18px_50px_rgba(20,16,12,0.08)] md:px-12">
+            <div className="grid gap-10 md:grid-cols-3">
+              {[
+                {
+                  title: "Build your profile",
+                  description: "Upload a resume or add experience manually. We organize the details for you.",
+                },
+                {
+                  title: "Paste the job description",
+                  description: "We extract the core skills and priorities from each posting.",
+                },
+                {
+                  title: "Generate and refine",
+                  description: "Get a tailored resume draft and adjust as you go.",
+                },
+              ].map((step, index) => (
+                <div key={step.title} className="space-y-4">
+                  <div className="text-sm font-semibold text-[#8B5B2B]">
+                    Step {index + 1}
+                  </div>
+                  <div className="text-lg font-semibold">{step.title}</div>
+                  <p className="text-sm text-[#6F6257]">{step.description}</p>
                 </div>
-              </div>
-              <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-6 h-64 flex items-center justify-center border border-orange-100">
-                <div className="text-center">
-                  <TrendingUp className="w-16 h-16 text-orange-600 mx-auto mb-4" />
-                  <h3 className="font-semibold text-orange-900">ATS Optimization</h3>
-                </div>
-              </div>
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 h-64 flex items-center justify-center border border-green-100">
-                <div className="text-center">
-                  <FileText className="w-16 h-16 text-green-600 mx-auto mb-4" />
-                  <h3 className="font-semibold text-green-900">Smart Templates</h3>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="py-24 px-6 bg-white">
+      <section id="care" className="px-6 pb-20">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-16">
-            <p className="text-sm text-[#6B6B6B] mb-2 uppercase tracking-wider">Features</p>
-            <h2 className="font-serif text-4xl font-bold text-[#2D2D2D]">Everything you need to land your dream job</h2>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-[#F7F5F3] rounded-xl flex items-center justify-center mx-auto mb-4">
-                <Sparkles className="w-8 h-8 text-[#2D2D2D]" />
-              </div>
-              <h3 className="font-serif text-xl font-semibold mb-3">AI-Powered Tailoring</h3>
-              <p className="text-[#6B6B6B]">
-                Our advanced AI analyzes job descriptions and optimizes your resume to match exactly what employers are looking for.
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="rounded-3xl border border-[#E4D7CA] bg-[#F7F2EA] p-8">
+              <h3 className="font-serif text-2xl">Support for every chapter</h3>
+              <p className="mt-4 text-sm text-[#6F6257]">
+                Whether you are just getting started, switching industries, or returning after a layoff,
+                Sleek guides you with a calm, premium workflow that respects your time.
               </p>
+              <div className="mt-6 flex items-center gap-3 text-sm text-[#1B1712]">
+                <CheckCircle className="h-4 w-4 text-[#8B5B2B]" />
+                Empathetic prompts that highlight your wins.
+              </div>
+              <div className="mt-3 flex items-center gap-3 text-sm text-[#1B1712]">
+                <Clock className="h-4 w-4 text-[#8B5B2B]" />
+                Save time with guided, repeatable workflows.
+              </div>
             </div>
-
-            <div className="text-center">
-              <div className="w-16 h-16 bg-[#F7F5F3] rounded-xl flex items-center justify-center mx-auto mb-4">
-                <Target className="w-8 h-8 text-[#2D2D2D]" />
-              </div>
-              <h3 className="font-serif text-xl font-semibold mb-3">Keyword Optimization</h3>
-              <p className="text-[#6B6B6B]">
-                Automatically identify and incorporate relevant keywords to pass ATS systems and get your resume in front of hiring managers.
+            <div className="rounded-3xl border border-[#E4D7CA] bg-[#FFFCF7] p-8">
+              <h3 className="font-serif text-2xl">Thoughtful limits, flexible pricing</h3>
+              <p className="mt-4 text-sm text-[#6F6257]">
+                Start with a generous free tier. When you need more, choose a monthly plan or pay as you go.
               </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-16 h-16 bg-[#F7F5F3] rounded-xl flex items-center justify-center mx-auto mb-4">
-                <Zap className="w-8 h-8 text-[#2D2D2D]" />
+              <div className="mt-6 space-y-3 text-sm text-[#1B1712]">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="h-4 w-4 text-[#8B5B2B]" />
+                  Free resume drafts each month
+                </div>
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="h-4 w-4 text-[#8B5B2B]" />
+                  Upgrade only when you need more output
+                </div>
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="h-4 w-4 text-[#8B5B2B]" />
+                  Always know what you have left
+                </div>
               </div>
-              <h3 className="font-serif text-xl font-semibold mb-3">Lightning Fast</h3>
-              <p className="text-[#6B6B6B]">
-                Generate a perfectly tailored resume in seconds, not hours. Apply to more jobs in less time.
-              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section id="pricing" className="py-24 px-6">
+      <section className="px-6 pb-24">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-16">
-            <p className="text-sm text-[#6B6B6B] mb-2 uppercase tracking-wider">Pricing</p>
-            <h2 className="font-serif text-4xl font-bold text-[#2D2D2D] mb-4">Choose your plan</h2>
-            <p className="text-[#6B6B6B] max-w-2xl mx-auto">
-              Scale your job applications with flexible pricing that grows with your needs. Start free, upgrade when you're ready.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Free Plan */}
-            <div className="border border-[#E5E5E5] rounded-xl p-8 bg-white hover:shadow-lg transition-shadow">
-              <h3 className="font-serif text-2xl font-semibold mb-2">Free</h3>
-              <p className="text-[#6B6B6B] mb-6">Perfect for trying out Sleek</p>
-              <div className="mb-6">
-                <span className="text-5xl font-bold text-[#2D2D2D]">$0</span>
-                <span className="text-[#6B6B6B]"> / month</span>
+          <div className="rounded-[36px] border border-[#1B1712] bg-[#1B1712] px-8 py-12 text-[#FFFCF7] md:px-16">
+            <div className="flex flex-col items-start gap-6 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h2 className="font-serif text-3xl md:text-4xl">Ready to tailor your next resume?</h2>
+                <p className="mt-3 text-sm text-[#EADFD3]">
+                  A polished resume for every job description, built with care and clarity.
+                </p>
               </div>
               <Link
                 href="/signup"
-                className="block w-full py-3 px-6 bg-[#F7F5F3] text-[#2D2D2D] rounded-lg hover:bg-[#E5E5E5] transition-colors text-center font-medium mb-6"
+                className="inline-flex items-center gap-2 rounded-full bg-[#FFFCF7] px-6 py-3 text-sm font-semibold text-[#1B1712] transition hover:-translate-y-0.5"
               >
-                Get Started
+                Start free
+                <ArrowRight className="h-4 w-4" />
               </Link>
-              <ul className="space-y-3">
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span className="text-[#6B6B6B]">5 tailored resumes per month</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Clock className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                  <span className="text-[#6B6B6B]">1 week data storage</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span className="text-[#6B6B6B]">Basic AI optimization</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span className="text-[#6B6B6B]">PDF export</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Monthly Plan */}
-            <div className="border-2 border-[#2D2D2D] rounded-xl p-8 bg-[#2D2D2D] text-white hover:shadow-2xl transition-shadow relative">
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-amber-400 text-[#2D2D2D] px-4 py-1 rounded-full text-sm font-semibold">
-                Most Popular
-              </div>
-              <h3 className="font-serif text-2xl font-semibold mb-2">Monthly</h3>
-              <p className="text-gray-300 mb-6">For active job seekers</p>
-              <div className="mb-6">
-                <span className="text-5xl font-bold">$19</span>
-                <span className="text-gray-300"> / month</span>
-              </div>
-              <Link
-                href="/signup"
-                className="block w-full py-3 px-6 bg-white text-[#2D2D2D] rounded-lg hover:bg-gray-100 transition-colors text-center font-medium mb-6"
-              >
-                Subscribe
-              </Link>
-              <ul className="space-y-3">
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span>Unlimited tailored resumes</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Shield className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
-                  <span>Indefinite data storage</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span>Advanced AI optimization</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span>Priority support</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span>Cover letter generation</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Yearly Plan */}
-            <div className="border border-[#E5E5E5] rounded-xl p-8 bg-white hover:shadow-lg transition-shadow relative">
-              <div className="absolute -top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                Save 21%
-              </div>
-              <h3 className="font-serif text-2xl font-semibold mb-2">Yearly</h3>
-              <p className="text-[#6B6B6B] mb-6">Best value for serious job hunters</p>
-              <div className="mb-6">
-                <span className="text-5xl font-bold text-[#2D2D2D]">$15</span>
-                <span className="text-[#6B6B6B]"> / month</span>
-                <div className="text-sm text-[#6B6B6B] mt-1">Billed annually at $180</div>
-              </div>
-              <Link
-                href="/signup"
-                className="block w-full py-3 px-6 bg-[#F7F5F3] text-[#2D2D2D] rounded-lg hover:bg-[#E5E5E5] transition-colors text-center font-medium mb-6"
-              >
-                Subscribe
-              </Link>
-              <ul className="space-y-3">
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span className="text-[#6B6B6B]">Unlimited tailored resumes</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Shield className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                  <span className="text-[#6B6B6B]">Indefinite data storage</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span className="text-[#6B6B6B]">Advanced AI optimization</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span className="text-[#6B6B6B]">Priority support</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span className="text-[#6B6B6B]">Cover letter generation</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span className="text-[#6B6B6B]">Early access to new features</span>
-                </li>
-              </ul>
             </div>
           </div>
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section id="faq" className="py-24 px-6 bg-white">
-        <div className="container mx-auto max-w-3xl">
-          <div className="text-center mb-16">
-            <p className="text-sm text-[#6B6B6B] mb-2 uppercase tracking-wider">FAQ</p>
-            <h2 className="font-serif text-4xl font-bold text-[#2D2D2D]">Frequently asked questions</h2>
+      <footer className="border-t border-[#E4D7CA] bg-[#FFFCF7] px-6 py-10">
+        <div className="container mx-auto flex flex-col items-center justify-between gap-4 text-sm text-[#6F6257] md:flex-row">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-[#8B5B2B]" />
+            <span className="font-serif text-base text-[#1B1712]">Sleek</span>
           </div>
-
-          <div className="space-y-6">
-            <details className="group bg-[#F7F5F3] rounded-lg p-6">
-              <summary className="font-semibold text-[#2D2D2D] cursor-pointer list-none flex justify-between items-center">
-                How does the AI tailoring work?
-                <span className="text-[#999] group-open:rotate-180 transition-transform"></span>
-              </summary>
-              <p className="mt-4 text-[#6B6B6B]">
-                Our AI analyzes the job description you provide and automatically adjusts your resume content, highlighting relevant skills and experience that match the position requirements.
-              </p>
-            </details>
-
-            <details className="group bg-[#F7F5F3] rounded-lg p-6">
-              <summary className="font-semibold text-[#2D2D2D] cursor-pointer list-none flex justify-between items-center">
-                What happens to my data after 1 week on the free plan?
-                <span className="text-[#999] group-open:rotate-180 transition-transform"></span>
-              </summary>
-              <p className="mt-4 text-[#6B6B6B]">
-                On the free plan, your uploaded documents and generated resumes are automatically deleted after 1 week. You can download your resumes before then. Paid plans offer indefinite storage.
-              </p>
-            </details>
-
-            <details className="group bg-[#F7F5F3] rounded-lg p-6">
-              <summary className="font-semibold text-[#2D2D2D] cursor-pointer list-none flex justify-between items-center">
-                Can I cancel my subscription anytime?
-                <span className="text-[#999] group-open:rotate-180 transition-transform"></span>
-              </summary>
-              <p className="mt-4 text-[#6B6B6B]">
-                Yes! You can cancel your subscription at any time. Your access will continue until the end of your billing period.
-              </p>
-            </details>
-
-            <details className="group bg-[#F7F5F3] rounded-lg p-6">
-              <summary className="font-semibold text-[#2D2D2D] cursor-pointer list-none flex justify-between items-center">
-                Do you offer refunds?
-                <span className="text-[#999] group-open:rotate-180 transition-transform"></span>
-              </summary>
-              <p className="mt-4 text-[#6B6B6B]">
-                We offer a 7-day money-back guarantee on all paid plans. If you're not satisfied, contact us for a full refund.
-              </p>
-            </details>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-24 px-6 bg-[#2D2D2D] text-white">
-        <div className="container mx-auto max-w-4xl text-center">
-          <h2 className="font-serif text-4xl font-bold mb-6">
-            Ready to land your dream job?
-          </h2>
-          <p className="text-xl text-gray-300 mb-8">
-            Join thousands of job seekers who have successfully tailored their resumes with Sleek.
-          </p>
-          <Link
-            href="/signup"
-            className="inline-block px-8 py-4 bg-white text-[#2D2D2D] rounded-lg hover:bg-gray-100 transition-colors text-lg font-medium"
-          >
-            Start for free
-          </Link>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-[#E5E5E5] bg-white py-12 px-6">
-        <div className="container mx-auto max-w-6xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-[#2D2D2D]" />
-              <span className="font-serif text-xl font-bold text-[#2D2D2D]">Sleek</span>
-            </div>
-            <p className="text-[#6B6B6B] text-sm">
-               2026 Sleek. All rights reserved.
-            </p>
-          </div>
+          <div>Tailored resumes with premium care.</div>
+          <div>2026 Sleek. All rights reserved.</div>
         </div>
       </footer>
     </div>
   );
 }
-

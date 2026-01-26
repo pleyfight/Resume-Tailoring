@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { ManualIngestPayload } from '@/lib/types';
+import { getAuthedSupabase } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,11 +26,16 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Real save with Supabase
-    const { getServerSupabase } = await import('@/lib/supabase');
-    const supabase = getServerSupabase();
-    
-    const userId = '00000000-0000-0000-0000-000000000000'; // Demo user
+    const auth = await getAuthedSupabase(request);
+    if (auth.error || !auth.user || !auth.supabase) {
+      return NextResponse.json(
+        { error: 'Unauthorized', details: auth.error },
+        { status: 401 }
+      );
+    }
+
+    const supabase = auth.supabase;
+    const userId = auth.user.id;
 
     // Start transaction-like operations
     const errors: string[] = [];

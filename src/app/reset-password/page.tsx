@@ -3,16 +3,31 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Sparkles, Mail, ArrowRight, CheckCircle } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 export default function ResetPasswordPage() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement actual password reset logic
-    console.log('Reset password for:', email);
+
+    setIsSubmitting(true);
+    setErrorMessage(null);
+
+    const redirectTo = `${window.location.origin}/update-password`;
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+
+    if (error) {
+      setErrorMessage(error.message);
+      setIsSubmitting(false);
+      return;
+    }
+
     setSubmitted(true);
+    setIsSubmitting(false);
   };
 
   return (
@@ -44,6 +59,11 @@ export default function ResetPasswordPage() {
 
               {/* Reset Form */}
               <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg border border-[#E5E5E5] p-8">
+                {errorMessage && (
+                  <div className="mb-5 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                    {errorMessage}
+                  </div>
+                )}
                 <div className="space-y-5">
                   {/* Email */}
                   <div>
@@ -67,10 +87,20 @@ export default function ResetPasswordPage() {
                   {/* Submit Button */}
                   <button
                     type="submit"
-                    className="w-full py-3 px-6 bg-[#2D2D2D] text-white rounded-lg hover:bg-[#1a1a1a] transition-colors font-medium flex items-center justify-center gap-2"
+                    disabled={isSubmitting}
+                    className="w-full py-3 px-6 bg-[#2D2D2D] text-white rounded-lg hover:bg-[#1a1a1a] transition-colors font-medium flex items-center justify-center gap-2 disabled:bg-[#D1D1D1] disabled:cursor-not-allowed"
                   >
-                    Send Reset Link
-                    <ArrowRight className="w-5 h-5" />
+                    {isSubmitting ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        Send Reset Link
+                        <ArrowRight className="w-5 h-5" />
+                      </>
+                    )}
                   </button>
                 </div>
               </form>

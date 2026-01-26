@@ -3,7 +3,7 @@
 ## Overview
 This backend implements a complete Resume Tailoring system using:
 - **Database:** Supabase (PostgreSQL)
-- **API:** Next.js 14 App Router
+- **API:** Next.js App Router (Next.js 16)
 - **AI:** Google Gemini 1.5 Flash
 
 ---
